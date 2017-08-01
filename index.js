@@ -5,20 +5,25 @@ const files = []
 fs.readdirSync(path.join(__dirname, 'images'))
    .forEach(file => {
       fs.readFile(path.join(__dirname, 'images', file), (err, data) => {
-         console.log(data)
-         files.push(data)
+         let date = file.split('.')[0]
+         files.push({date, data})
       })
       
    })
 const express = require('express')
 const app = express()
 
+
 app.use(express.static(path.join(__dirname, 'public')))
 
 app.get('/image', (req, res, next) => {
-   console.log(files[0])
-   const file = `data:image/jpeg;base64,${new Buffer(files[0]).toString('base64')}`
-   res.status(200).send(file)
+   const today = new Date().toLocaleString().split(' ')[0]
+   const badgeFile = files.find(file => file.date === today)
+   if (!badgeFile) {
+      return res.status(500).json({message: "No Badge Found for today"})
+   } 
+   const badgeString = `data:image/jpeg;base64,${new Buffer(badgeFile.data).toString('base64')}`
+   res.status(200).send(badgeString)
 })
 
 app.listen(3000, () => {
